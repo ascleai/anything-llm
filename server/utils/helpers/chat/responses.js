@@ -41,6 +41,7 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     // to preserve previously generated content.
     const handleAbort = () => {
       stream?.endMeasurement(usage);
+      stream?.controller?.abort();
       clientAbortedHandler(resolve, fullText);
     };
     response.on("close", handleAbort);

@@ -155,15 +155,20 @@ class LocalAiLLM {
         `LocalAi chat: ${this.model} is not valid for chat completion!`
       );
 
+    const controller = new AbortController();
+
     const measuredStreamRequest = await LLMPerformanceMonitor.measureStream(
       this.openai.chat.completions.create({
         model: this.model,
         stream: true,
         messages,
         temperature,
+        signal: controller.signal,
       }),
       messages
     );
+
+    measuredStreamRequest.controller = controller;
     return measuredStreamRequest;
   }
 
