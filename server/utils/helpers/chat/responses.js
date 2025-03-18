@@ -17,7 +17,7 @@ function clientAbortedHandler(resolve, fullText) {
  * @returns {Promise<string>}
  */
 function handleDefaultStreamResponseV2(response, stream, responseProps) {
-  const { uuid = uuidv4(), sources = [] } = responseProps;
+  const { uuid = uuidv4(), sources = [], isAborted = () => false } = responseProps;
 
   // Why are we doing this?
   // OpenAI do enable the usage metrics in the stream response but:
@@ -32,17 +32,23 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     completion_tokens: 0,
   };
 
+  if (isAborted()) {
+    stream?.endMeasurement(usage);
+    stream?.controller?.abort();
+    return;
+  }
+
   return new Promise(async (resolve) => {
     let fullText = "";
+    let hasAborted = false;
 
     // Establish listener to early-abort a streaming response
     // in case things go sideways or the user does not like the response.
     // We preserve the generated text but continue as if chat was completed
     // to preserve previously generated content.
     const handleAbort = () => {
-      stream?.endMeasurement(usage);
+      hasAborted = true;
       stream?.controller?.abort();
-      clientAbortedHandler(resolve, fullText);
     };
     response.on("close", handleAbort);
 
@@ -51,6 +57,12 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
       for await (const chunk of stream) {
         const message = chunk?.choices?.[0];
         const token = message?.delta?.content;
+
+        if (isAborted() || hasAborted) {
+          stream?.endMeasurement(usage);
+          clientAbortedHandler(resolve, fullText);
+          break;
+        }
 
         // If we see usage metrics in the chunk, we can use them directly
         // instead of estimating them, but we only want to assign values if
