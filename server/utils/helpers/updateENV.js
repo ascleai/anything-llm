@@ -933,6 +933,7 @@ function dumpENV() {
     // and are either managed or manually set ENV key:values.
     "STORAGE_DIR",
     "SERVER_PORT",
+    "COLLECTOR_PORT",
     // For persistent data encryption
     "SIG_KEY",
     "SIG_SALT",
