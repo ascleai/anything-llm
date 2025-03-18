@@ -13,6 +13,7 @@ import {
 import { humanFileSize } from "@/utils/numbers";
 import { REMOVE_ATTACHMENT_EVENT } from "../../DnDWrapper";
 import { Tooltip } from "react-tooltip";
+import { useTranslation } from "react-i18next";
 
 /**
  * @param {{attachments: import("../../DnDWrapper").Attachment[]}}
@@ -33,6 +34,7 @@ export default function AttachmentManager({ attachments }) {
  * @param {{attachment: import("../../DnDWrapper").Attachment}}
  */
 function AttachmentItem({ attachment }) {
+  const { t } = useTranslation();
   const { uid, file, status, error, document, type, contentString } =
     attachment;
   const { iconBgColor, Icon } = displayFromFile(file);
@@ -113,7 +115,7 @@ function AttachmentItem({ attachment }) {
       <>
         <div
           data-tooltip-id={`attachment-uid-${uid}-success`}
-          data-tooltip-content={`${file.name} will be attached to this prompt. It will not be embedded into the workspace permanently.`}
+          data-tooltip-content={t("chat_window.image_upload_message", { fileName: file.name })}
           className={`relative h-14 px-2 py-2 flex items-center gap-x-4 rounded-lg bg-zinc-800 light:bg-theme-bg-sidebar border border-white/20 w-[200px] group`}
         >
           <div className="invisible group-hover:visible absolute -top-[5px] -right-[5px] w-fit h-fit z-[10]">
@@ -142,7 +144,7 @@ function AttachmentItem({ attachment }) {
               {file.name}
             </p>
             <p className="text-white/80 light:text-black/80 text-xs font-medium">
-              Image attached!
+              {t("chat_window.image_attach")}
             </p>
           </div>
         </div>
@@ -160,7 +162,7 @@ function AttachmentItem({ attachment }) {
     <>
       <div
         data-tooltip-id={`attachment-uid-${uid}-success`}
-        data-tooltip-content={`${file.name} was uploaded and embedded into this workspace. It will be available for RAG chat now.`}
+        data-tooltip-content={t("chat_window.file_upload_message", { fileName: file.name })}
         className={`relative h-14 px-2 py-2 flex items-center gap-x-4 rounded-lg bg-zinc-800 light:bg-theme-bg-sidebar border border-white/20 w-[200px] group`}
       >
         <div className="invisible group-hover:visible absolute -top-[5px] -right-[5px] w-fit h-fit z-[10]">
@@ -180,7 +182,7 @@ function AttachmentItem({ attachment }) {
         <div className="flex flex-col w-[130px]">
           <p className="text-white text-xs font-medium truncate">{file.name}</p>
           <p className="text-white/80 light:text-black/80 text-xs font-medium">
-            File embedded!
+            {t("chat_window.file_embedded")}
           </p>
         </div>
       </div>
