@@ -41,6 +41,8 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     // We preserve the generated text but continue as if chat was completed
     // to preserve previously generated content.
     const handleAbort = () => {
+      stream?.endMeasurement(usage);
+      clientAbortedHandler(resolve, fullText);
       hasAborted = true;
     };
     response.on("close", handleAbort);
@@ -52,8 +54,6 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
         const token = message?.delta?.content;
 
         if (isAborted() || hasAborted) {
-          stream?.endMeasurement(usage);
-          clientAbortedHandler(resolve, fullText);
           break;
         }
 
