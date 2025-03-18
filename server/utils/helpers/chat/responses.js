@@ -32,12 +32,6 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     completion_tokens: 0,
   };
 
-  if (isAborted()) {
-    stream?.endMeasurement(usage);
-    stream?.controller?.abort();
-    return;
-  }
-
   return new Promise(async (resolve) => {
     let fullText = "";
     let hasAborted = false;
@@ -48,7 +42,6 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     // to preserve previously generated content.
     const handleAbort = () => {
       hasAborted = true;
-      stream?.controller?.abort();
     };
     response.on("close", handleAbort);
 
