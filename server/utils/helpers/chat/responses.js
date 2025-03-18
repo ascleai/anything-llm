@@ -34,7 +34,6 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
 
   return new Promise(async (resolve) => {
     let fullText = "";
-    let hasAborted = false;
 
     // Establish listener to early-abort a streaming response
     // in case things go sideways or the user does not like the response.
@@ -43,7 +42,6 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
     const handleAbort = () => {
       stream?.endMeasurement(usage);
       clientAbortedHandler(resolve, fullText);
-      hasAborted = true;
     };
     response.on("close", handleAbort);
 
@@ -53,7 +51,7 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
         const message = chunk?.choices?.[0];
         const token = message?.delta?.content;
 
-        if (isAborted() || hasAborted) {
+        if (isAborted()) {
           break;
         }
 
