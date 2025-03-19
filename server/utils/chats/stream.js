@@ -26,6 +26,11 @@ async function streamChatWithWorkspace(
   const uuid = uuidv4();
   const updatedMessage = await grepCommand(message, user);
 
+  let isAborted = false;
+  response.on("close", () => {
+    isAborted = true;
+  });
+
   if (Object.keys(VALID_COMMANDS).includes(updatedMessage)) {
     const data = await VALID_COMMANDS[updatedMessage](
       workspace,
@@ -222,6 +227,10 @@ async function streamChatWithWorkspace(
     rawHistory
   );
 
+  if (isAborted) {
+    return;
+  }
+
   // If streaming is not explicitly enabled for connector
   // we do regular waiting of a response and send a single chunk.
   if (LLMConnector.streamingEnabled() !== true) {
@@ -251,6 +260,7 @@ async function streamChatWithWorkspace(
     completeText = await LLMConnector.handleStream(response, stream, {
       uuid,
       sources,
+      isAborted: () => isAborted 
     });
     metrics = stream.metrics;
   }
