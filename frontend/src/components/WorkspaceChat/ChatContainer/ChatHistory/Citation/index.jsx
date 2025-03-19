@@ -111,6 +111,55 @@ function CitationDetailModal({ source, onClose }) {
   const { references, title, chunks = [] } = source || {};
   const { isUrl, text: webpageUrl, href: linkTo } = parseChunkSource(source);
 
+  const getHighlightParams = () => {
+    // 클릭된 인용 링크에서 데이터 가져오기
+    const citationLink = document.querySelector('a.citation-link[data-start-pos][data-end-pos]');
+    
+    if (citationLink) {
+      return {
+        chunkIndex: parseInt(citationLink.getAttribute('data-citation-index')),
+        startPos: parseInt(citationLink.getAttribute('data-start-pos')),
+        endPos: parseInt(citationLink.getAttribute('data-end-pos'))
+      };
+    }
+    
+    // URL 해시에서도 확인 (기존 방식 유지)
+    const match = window.location.hash.match(/\[(\d+):(\d+):(\d+)\]/);
+    if (match) {
+      return {
+        chunkIndex: parseInt(match[1]),
+        startPos: parseInt(match[2]),
+        endPos: parseInt(match[3])
+      };
+    }
+    
+    return null;
+  };
+
+  // 텍스트에 하이라이트 적용하는 함수
+  const highlightTextRange = (text, chunkIdx, params) => {
+    if (!params || params.chunkIndex !== chunkIdx) return text;
+    
+    const { startPos, endPos } = params;
+    if (startPos < 0 || endPos > text.length || startPos >= endPos) return text;
+    
+    const beforeText = text.substring(0, startPos - 1);
+    const highlightedText = text.substring(startPos - 1, endPos);
+    const afterText = text.substring(endPos);
+    
+    return (
+      <>
+        {beforeText}
+        <span className="bg-yellow-400 text-black px-0.5 rounded">
+          {highlightedText}
+        </span>
+        {afterText}
+      </>
+    );
+  };
+
+  const highlightParams = getHighlightParams();
+
   return (
     <ModalWrapper isOpen={source}>
       <div className="w-full max-w-2xl bg-theme-bg-secondary rounded-lg shadow border-2 border-theme-modal-border overflow-hidden">
@@ -157,7 +206,11 @@ function CitationDetailModal({ source, onClose }) {
                 <div className="pt-6 text-white">
                   <div className="flex flex-col w-full justify-start pb-6 gap-y-1">
                     <p className="text-white whitespace-pre-line">
-                      {HTMLDecode(omitChunkHeader(text))}
+                      {highlightTextRange(
+                        HTMLDecode(omitChunkHeader(text)), 
+                        idx + 1, 
+                        highlightParams
+                      )}
                     </p>
 
                     {!!score && (
