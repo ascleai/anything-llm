@@ -132,7 +132,7 @@ model workspaces {
   similarityThreshold          Float?                         @default(0.25)
   chatProvider                 String?
   chatModel                    String?
-  topN                         Int?                           @default(4)
+  topN                         Int?                           @default(10)
   chatMode                     String?                        @default("chat")
   pfpFilename                  String?
   agentProvider                String?
