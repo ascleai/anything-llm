@@ -17,7 +17,7 @@ function clientAbortedHandler(resolve, fullText) {
  * @returns {Promise<string>}
  */
 function handleDefaultStreamResponseV2(response, stream, responseProps) {
-  const { uuid = uuidv4(), sources = [] } = responseProps;
+  const { uuid = uuidv4(), sources = [], isAborted = () => false } = responseProps;
 
   // Why are we doing this?
   // OpenAI do enable the usage metrics in the stream response but:
@@ -50,6 +50,10 @@ function handleDefaultStreamResponseV2(response, stream, responseProps) {
       for await (const chunk of stream) {
         const message = chunk?.choices?.[0];
         const token = message?.delta?.content;
+
+        if (isAborted()) {
+          break;
+        }
 
         // If we see usage metrics in the chunk, we can use them directly
         // instead of estimating them, but we only want to assign values if
