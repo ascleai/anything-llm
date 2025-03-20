@@ -44,7 +44,7 @@ class PdfOcrLoader {
         return loader;
     }
 
-        /**
+    /**
      * PDF 파일 경로로부터 출력 디렉토리 경로를 생성하고 디렉토리를 만듭니다.
      * 
      * @returns {string} outputDir - 생성된 디렉토리 경로
@@ -58,6 +58,99 @@ class PdfOcrLoader {
         return outputDir;
     }
 
+
+    /**
+     * 각 field의 p1->p2 변화량을 평균내어 회전 각도를 결정
+     * @param {Object} jsonData - JSON 데이터
+     * @param {number} threshold - x 또는 y의 변화가 '작은' 것으로 간주할 임계값 (기본 10)
+     * @returns {number} 회전 각도 (0, 90, -90, 180)
+     */
+    determineRotationAngle(jsonData, threshold = 10) {
+        let totalDx = 0;
+        let totalDy = 0;
+        let count = 0;
+        
+        jsonData.images.forEach(image => {
+        if (image.fields && Array.isArray(image.fields)) {
+            image.fields.forEach(field => {
+            const vertices = field.boundingPoly.vertices;
+            if (vertices && vertices.length >= 2) {
+                const dx = vertices[1].x - vertices[0].x;
+                const dy = vertices[1].y - vertices[0].y;
+                totalDx += dx;
+                totalDy += dy;
+                count++;
+            }
+            });
+        }
+        });
+        
+        if (count === 0) {
+        return 0; // 데이터가 없으면 회전 없음
+        }
+        
+        const avgDx = totalDx / count;
+        const avgDy = totalDy / count;
+        
+        console.log(`평균 dx: ${avgDx}, 평균 dy: ${avgDy}`);
+        
+        // 각 조건에 따른 회전 각도 결정
+        if (avgDx > 0 && Math.abs(avgDy) < threshold) {
+        // 정상 문서: p1->p2로 갈 때 x값 증가, y 변화 작음
+        return 0;
+        } else if (avgDx < 0 && Math.abs(avgDy) < threshold) {
+        // 180도 뒤집힌 문서: p1->p2로 갈 때 x값 감소, y 변화 작음
+        return 180;
+        } else if (avgDy > 0 && Math.abs(avgDx) < threshold) {
+        // 우로 90도 뒤집힌 문서: p1->p2로 갈 때 y값 증가, x 변화 작음 -> 좌로 90도 회전 (즉, -90도)
+        return -90;
+        } else if (avgDy < 0 && Math.abs(avgDx) < threshold) {
+        // 좌로 90도 뒤집힌 문서: p1->p2로 갈 때 y값 감소, x 변화 작음 -> 우로 90도 회전 (즉, 90도)
+        return 90;
+        }
+        
+        // 조건에 부합하지 않으면 기본값 (회전 없음)
+        return 0;
+    }
+    
+    /**
+     * 이미지 회전 처리: JSON 데이터를 기반으로 회전 각도를 결정한 후 convert 명령어를 실행
+     * @param {string} inputImagePath - 입력 이미지 경로
+     * @param {string} outputImagePath - 출력 이미지 경로
+     * @param {Object} jsonData - JSON 데이터
+    * @throws {Error} - 전처리 작업 실패 시 reject 되는 에러
+     */
+    rotateImage(inputImagePath, jsonData) {
+        return new Promise((resolve, reject) => {
+            const outputImagePath = inputImagePath.replace(/\.png$/, "_rotate.png");
+            console.log(`🖼️ Rotate 처리 중: ${inputImagePath}`);
+            const angle = this.determineRotationAngle(jsonData);
+      
+            if (angle === 0) {
+                console.log(`✅ rotation 생략: ${inputImagePath}`);
+              resolve(false);
+              return;
+            }
+      
+            const command = `convert "${inputImagePath}" -rotate ${angle} "${outputImagePath}"`;
+            //console.log("실행 커맨드:", command);
+      
+            exec(command, (error, stdout, stderr) => {
+              if (error) {
+                console.error(`회전 에러: ${error.message}`);
+                reject(error);
+                return;
+              }
+            //   if (stderr) {
+            //     console.error(`stderr: ${stderr}`);
+            //   }
+              console.log(`✅ Rotate ${angle} 완료: ${outputImagePath}`);
+              resolve(outputImagePath);
+            });
+          });
+        }
+      
+    
     /**
      * 단일 PDF 페이지를 이미지로 변환
      * 
@@ -159,6 +252,7 @@ class PdfOcrLoader {
             const dirName = path.basename(path.dirname(imagePath));
             const baseName = path.basename(imagePath);
             const imageName = `${dirName}/${baseName}`;
+            console.log(`🖼️ OCR 처리 중: ${imagePath}`);
 
             const requestBody = {
                 images: [{
@@ -185,6 +279,7 @@ class PdfOcrLoader {
                     }
                 }
             );
+            console.log(`✅ OCR 완료: ${imagePath}`);
             return response.data;
         } catch (error) {
             console.error('Error requesting OCR:', error);
@@ -243,7 +338,13 @@ class PdfOcrLoader {
         const imagePath = path.join(this.outputDir, `${page}.png`)
 
         const deskewedImage = await this.deskewImage(imagePath);
-        const ocrResponse = await this.requestOcrImage(deskewedImage);
+        let ocrResponse = await this.requestOcrImage(deskewedImage);
+        // OCR 결과 판독 후 회전 여부 결정 및 회전 처리
+        let rotatedImage = await this.rotateImage(deskewedImage,  ocrResponse);
+        if (rotatedImage) {
+            rotatedImage = await this.deskewImage(rotatedImage);
+            ocrResponse = await this.requestOcrImage(rotatedImage);
+        }        
         const parsedText = this.parseOcrResponse(ocrResponse);
         if (debug) {
             const jsonOutputPath = imagePath.replace(/\.png$/, ".json");
@@ -295,8 +396,16 @@ class PdfOcrLoader {
                     // a. 이미지 전처리 (Deskew)
                     const deskewedImage = await self.deskewImage(imagePath);
                     // b. CLOVA OCR API 호출
-                    const ocrResponse = await self.requestOcrImage(deskewedImage);
-                    // c. OCR 결과 파싱
+                    let ocrResponse = await self.requestOcrImage(deskewedImage);
+
+                    // c. OCR 결과 판독 후 회전 여부 결정 및 회전 처리
+                    let rotatedImage = await self.rotateImage(deskewedImage,  ocrResponse);
+                    if (rotatedImage) {
+                        rotatedImage = await self.deskewImage(rotatedImage);
+                        ocrResponse = await self.requestOcrImage(rotatedImage);
+                    }    
+
+                    // d. OCR 결과 text 파싱
                     const parsedText = self.parseOcrResponse(ocrResponse);
                     
                     results[index] = parsedText;
