@@ -900,6 +900,8 @@ const TRANSLATIONS = {
     send: "Send prompt message to workspace",
     file_embedded: "File embedded!",
     file_upload_message: "{{fileName}} was uploaded and embedded into this workspace. It will be available for RAG chat now.",
+    file_upload_failed: "this file failed to upload",
+    file_unavailable: "It will not be available in the workspace.",
     image_attach: "Image attached!",
     image_upload_message: "{{fileName}} will be attached to this prompt. It will not be embedded into the workspace permanently.",
     thought_chain: {
@@ -909,7 +911,7 @@ const TRANSLATIONS = {
       finished: "Model has finished thinking"
     },
     copy_block: "Copy block",
-    copied: "Copied!"
+    copied: "Copied!",
   },
   action: {
     copy: "Copy",

@@ -21,9 +21,9 @@ export default function MaxContextSnippets({ workspace, setHasChanges }) {
         max={200}
         step={1}
         onWheel={(e) => e.target.blur()}
-        defaultValue={workspace?.topN ?? 4}
+        defaultValue={workspace?.topN ?? 10}
         className="border-none bg-theme-settings-input-bg text-white placeholder:text-theme-settings-input-placeholder text-sm rounded-lg focus:outline-primary-button active:outline-primary-button outline-none block w-full p-2.5 mt-2"
-        placeholder="4"
+        placeholder="10"
         required={true}
         autoComplete="off"
         onChange={() => setHasChanges(true)}
