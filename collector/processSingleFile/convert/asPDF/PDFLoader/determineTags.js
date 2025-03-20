@@ -45,7 +45,7 @@ function removeSpacesAndLower(text) {
         "bills": ["진료비 내역서", "납입확인서", "소득공제", "진료비 계산서", "정액수가", "포괄수가", "납부한 금액", "진료비 영수증", "현금영수증"],
         "bills_detail": ["입원처방 상세내역", "세부산정내역", "세부내역서"],
         "confirmation": ["진료 확인서", "통원 확인서", "통원 중임", "통원)확인서", "퇴원 확인서", "입원 확인서", "외출 신청서", "외박 신청서", "진료 받았음을 확인합니다"],
-        "medical_record": ["진료기록부", "응급진료기록", "진료기록지", "KTAS", "Triage Note", "재진기록", "초진기록", "경과기록", "Progress note", "Doctor's Record", "외래처방전", "Clinical Chart", "요약기록"],
+        "medical_record": ["진료기록부", "응급진료기록", "진료기록지", "KTAS", "Triage Note", "재진기록", "초진기록", "경과기록", "Progress note", "Doctor's Record", "외래처방전", "Clinical Chart", "Patient's Chart", "요약기록"],
         "doctor_order": ["Doctor Order", "Doctor's Order", "ORDER SHEET", "의사지시기록", "오더일"],
         "exam_report": ["검사슬립지", "판독일", "판독시간", "Exam date", "판독의", "판독자", "촬영일자", "검사일", "판독결과", "검체채취", "채취일", "검체접수", "검사시행일", "Test Result", "조직병리", "참고치", "기능결과", "기능검사", "Report for", "Reported by", "Examination Date", "영상의학 보고서", "Examining"],
         "operation_record": ["물리치료 기록지", "Treatment Record", "Operation Record", "수술기록", "Date of Operation", "Name of operation", "surgeon", "anesthesi", "anesth method", "circulator", "마취종류", "수술시작시간", "수술종료시간", "집도의", "수술소견"],
