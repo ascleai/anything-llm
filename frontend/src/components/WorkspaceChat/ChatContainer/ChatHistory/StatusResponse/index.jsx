@@ -3,12 +3,14 @@ import { CaretDown } from "@phosphor-icons/react";
 
 import AgentAnimation from "@/media/animations/agent-animation.webm";
 import AgentStatic from "@/media/animations/agent-static.png";
+import { useTranslation } from "react-i18next";
 
 export default function StatusResponse({
   messages = [],
   isThinking = false,
   showCheckmark = false,
 }) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const currentThought = messages[messages.length - 1];
   const previousThoughts = messages.slice(0, -1);
@@ -83,11 +85,11 @@ export default function StatusResponse({
                   onClick={handleExpandClick}
                   data-tooltip-id="expand-cot"
                   data-tooltip-content={
-                    isExpanded ? "Hide thought chain" : "Show thought chain"
+                    isExpanded ? t("chat_window.thought_chain.hide") : t("chat_window.thought_chain.show")
                   }
                   className="border-none text-theme-text-secondary hover:text-theme-text-primary transition-colors p-1 rounded-full hover:bg-theme-sidebar-item-hover"
                   aria-label={
-                    isExpanded ? "Hide thought chain" : "Show thought chain"
+                    isExpanded ? t("chat_window.thought_chain.hide") : t("chat_window.thought_chain.show")
                   }
                 >
                   <CaretDown

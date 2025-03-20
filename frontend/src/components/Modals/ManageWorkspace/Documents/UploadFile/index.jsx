@@ -23,7 +23,7 @@ export default function UploadFile({
   const handleSendLink = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setLoadingMessage("Scraping link...");
+    setLoadingMessage(t("connectors.upload.scraping"));
     setFetchingUrl(true);
     const formEl = e.target;
     const form = new FormData(formEl);

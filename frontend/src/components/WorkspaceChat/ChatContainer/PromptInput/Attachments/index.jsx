@@ -14,6 +14,7 @@ import { humanFileSize, milliToHms } from "@/utils/numbers";
 import { REMOVE_ATTACHMENT_EVENT } from "../../DnDWrapper";
 import { Tooltip } from "react-tooltip";
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * @param {{attachments: import("../../DnDWrapper").Attachment[]}}
@@ -34,6 +35,7 @@ export default function AttachmentManager({ attachments }) {
  * @param {{attachment: import("../../DnDWrapper").Attachment}}
  */
 function AttachmentItem({ attachment }) {
+  const { t } = useTranslation();
   const { uid, file, status, error, document, type, contentString } =
     attachment;
   const { iconBgColor, Icon } = displayFromFile(file);
@@ -142,7 +144,7 @@ function AttachmentItem({ attachment }) {
               {file.name}
             </p>
             <p className="text-red-100 light:text-red-600 text-xs truncate">
-              {error ?? "파일 업로드에 실패했습니다."} 작업공간에서 사용할 수 없습니다.
+              {error ?? t("chat_window.upload_failed")} {t("chat_window.file_unavailable")}
             </p>
           </div>
         </div>
@@ -161,7 +163,7 @@ function AttachmentItem({ attachment }) {
       <>
         <div
           data-tooltip-id={`attachment-uid-${uid}-success`}
-          data-tooltip-content={`${file.name} 파일이 프롬프트에 첨부되지만, 작업 공간에 영구적으로 삽입되지는 않습니다.`}
+          data-tooltip-content={t("chat_window.image_upload_message", { fileName: file.name })}
           className={`relative h-14 px-2 py-2 flex items-center gap-x-4 rounded-lg bg-zinc-800 light:bg-theme-bg-sidebar border border-white/20 w-[200px] group`}
         >
           <div className="invisible group-hover:visible absolute -top-[5px] -right-[5px] w-fit h-fit z-[10]">
@@ -190,7 +192,7 @@ function AttachmentItem({ attachment }) {
               {file.name}
             </p>
             <p className="text-white/80 light:text-black/80 text-xs font-medium">
-              이미지가 첨부되었습니다!
+              {t("chat_window.image_attach")}
             </p>
           </div>
         </div>
@@ -209,7 +211,7 @@ function AttachmentItem({ attachment }) {
       <>
         <div
           data-tooltip-id={`attachment-uid-${uid}-success`}
-          data-tooltip-content={`${file.name} 파일이 업로드되어 작업 공간에 추가되어 RAG 채팅에서 사용하실 수 있습니다.`}
+          data-tooltip-content={t("chat_window.file_upload_message", { fileName: file.name })}
           className={`relative h-14 px-2 py-2 flex items-center gap-x-4 rounded-lg bg-zinc-800 light:bg-theme-bg-sidebar border border-white/20 w-[200px] group`}
         >
           <div className="invisible group-hover:visible absolute -top-[5px] -right-[5px] w-fit h-fit z-[10]">
@@ -231,7 +233,7 @@ function AttachmentItem({ attachment }) {
               {file.name}
             </p>
             <p className="text-white/80 light:text-black/80 text-xs font-medium">
-              파일이 첨부되었습니다!
+              {t("chat_window.file_embedded")}
             </p>
           </div>
         </div>

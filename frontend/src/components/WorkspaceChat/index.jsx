@@ -6,8 +6,10 @@ import paths from "@/utils/paths";
 import ModalWrapper from "../ModalWrapper";
 import { useParams } from "react-router-dom";
 import { DnDFileUploaderProvider } from "./ChatContainer/DnDWrapper";
+import { useTranslation } from "react-i18next";
 
 export default function WorkspaceChat({ loading, workspace }) {
+  const { t } = useTranslation();
   const { threadSlug = null } = useParams();
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -19,7 +21,7 @@ export default function WorkspaceChat({ loading, workspace }) {
         setLoadingHistory(false);
         return false;
       }
-
+  
       const chatHistory = threadSlug
         ? await Workspace.threads.chatHistory(workspace.slug, threadSlug)
         : await Workspace.chatHistory(workspace.slug);
@@ -28,7 +30,8 @@ export default function WorkspaceChat({ loading, workspace }) {
       setLoadingHistory(false);
     }
     getHistory();
-  }, [workspace, loading]);
+    setEventDelegatorForCodeSnippets(t);
+  }, [workspace, loading, t]);
 
   if (loadingHistory) return <LoadingChat />;
   if (!loading && !loadingHistory && !workspace) {
@@ -73,7 +76,7 @@ export default function WorkspaceChat({ loading, workspace }) {
 // Enables us to safely markdown and sanitize all responses without risk of injection
 // but still be able to attach a handler to copy code snippets on all elements
 // that are code snippets.
-function copyCodeSnippet(uuid) {
+function copyCodeSnippet(uuid, t) {
   const target = document.querySelector(`[data-code="${uuid}"]`);
   if (!target) return false;
   const markdown =
@@ -85,7 +88,7 @@ function copyCodeSnippet(uuid) {
   window.navigator.clipboard.writeText(markdown);
   target.classList.add("text-green-500");
   const originalText = target.innerHTML;
-  target.innerText = "Copied!";
+  target.innerText = t("chat_window.copied")
   target.setAttribute("disabled", true);
 
   setTimeout(() => {
@@ -96,11 +99,11 @@ function copyCodeSnippet(uuid) {
 }
 
 // Listens and hunts for all data-code-snippet clicks.
-export function setEventDelegatorForCodeSnippets() {
+export function setEventDelegatorForCodeSnippets(t) {
   document?.addEventListener("click", function (e) {
     const target = e.target.closest("[data-code-snippet]");
     const uuidCode = target?.dataset?.code;
     if (!uuidCode) return false;
-    copyCodeSnippet(uuidCode);
+    copyCodeSnippet(uuidCode, t);
   });
 }
