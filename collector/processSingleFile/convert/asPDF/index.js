@@ -68,7 +68,10 @@ async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
   const tagGroups = {};
   let previousTag = null; // 이전 태그를 저장할 변수
 
-  validDocs.forEach(doc => {
+  [...validDocs.entries()].forEach(([index, doc]) => {
+    // 현재 처리 중인 문서 번호 출력
+    console.log(`Tag 확인 중: ${index + 1}/${validDocs.length}`);
+    
     // 각 페이지 텍스트로부터 태그 리스트 생성
     const tags = determineTags(doc.pageContent);
     let tag = tags[0];
