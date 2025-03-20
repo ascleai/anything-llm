@@ -56,7 +56,18 @@ function removeSpacesAndLower(text) {
       };
       
       const wordsDict = {
-        "medical_record": ["초진 차트", "재진 차트"],
+        "title": ["발행된 사본", "상기 용도 외"],
+        "bills": ["본인부담", "할인액", "공단부담"],
+        "bills_detail": ["입원처방 상세내역", "세부산정내역", "세부내역서"],
+        "confirmation": ["원무과"],
+        "medical_record": ["초진 차트", "재진 차트", "주상병", "Subjecive"],
+        "doctor_order": ["Order", "오더의", "오더시간"],
+        "exam_report": ["report", "result", "Findings", "검사항목"],
+        "operation_record": ["Assistant", "ass't", "drain", "Preoprative", "postoperative"],
+        "medical_certificate": ["표준질병", "한국표준", "최종진단"],
+        "nurse_record": ["간호사"],
+        "impression_report": ["내원경위"],
+        "hospitalization_record": ["배설기능", "삼킴장애", "수면장애", "교육수준", "수술병력", "입원동기", "현병력", "현재력", "흡연", "음주", "입원상태"],
       };
 
     // 문서 내 검색을 위해 공백 제거 및 소문자 처리

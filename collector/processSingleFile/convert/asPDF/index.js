@@ -66,14 +66,25 @@ async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
 
   // 태그별로 페이지들을 그룹화하여 별도의 문서 생성
   const tagGroups = {};
+  let previousTag = null; // 이전 태그를 저장할 변수
+
   validDocs.forEach(doc => {
     // 각 페이지 텍스트로부터 태그 리스트 생성
     const tags = determineTags(doc.pageContent);
-    const tag = tags[0]
-    if (!tagGroups[tag]) {
-      tagGroups[tag] = [];
+    let tag = tags[0];
+    
+    // tags가 비어있으면 이전 태그를 사용
+    if (!tag && previousTag) {
+      tag = previousTag;
     }
-    tagGroups[tag].push(doc.pageContent);
+    
+    if (tag) {
+      if (!tagGroups[tag]) {
+        tagGroups[tag] = [];
+      }
+      tagGroups[tag].push(doc.pageContent);
+      previousTag = tag; // 현재 태그를 이전 태그로 저장
+    }
   });
 
   const tagDocuments = [];
