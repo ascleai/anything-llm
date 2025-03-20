@@ -105,11 +105,33 @@ function omitChunkHeader(text) {
   return text.split("</document_metadata>")[1].trim();
 }
 
-function CitationDetailModal({ source, onClose }) {
+function CitationDetailModal({ source, highlightInfo, onClose }) {
   if (!source) return null;
   
   const { references, title, chunks = [] } = source || {};
   const { isUrl, text: webpageUrl, href: linkTo } = parseChunkSource(source);
+
+  // 텍스트에 하이라이트 적용하는 함수
+  const highlightTextRange = (text, params) => {
+    if (!params) return text;
+    
+    const { startPos, endPos } = params;
+    if (startPos < 0 || endPos > text.length || startPos >= endPos) return text;
+    
+    const beforeText = text.substring(0, startPos);
+    const highlightedText = text.substring(startPos, endPos);
+    const afterText = text.substring(endPos);
+    
+    return (
+      <>
+        {beforeText}
+        <span className="bg-yellow-400 text-black px-0.5 rounded">
+          {highlightedText}
+        </span>
+        {afterText}
+      </>
+    );
+  };
 
   return (
     <ModalWrapper isOpen={source}>
@@ -157,7 +179,10 @@ function CitationDetailModal({ source, onClose }) {
                 <div className="pt-6 text-white">
                   <div className="flex flex-col w-full justify-start pb-6 gap-y-1">
                     <p className="text-white whitespace-pre-line">
-                      {HTMLDecode(omitChunkHeader(text))}
+                      {highlightTextRange(
+                        HTMLDecode(omitChunkHeader(text)),
+                        highlightInfo
+                      )}
                     </p>
 
                     {!!score && (
