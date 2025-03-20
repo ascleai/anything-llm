@@ -117,7 +117,6 @@ function RenderAssistantChatContent({ message, sources = [] }) {
         
         if (startPos && endPos) {
           setHighlightInfo({
-            chunkIndex: index,
             startPos: parseInt(startPos),
             endPos: parseInt(endPos)
           });

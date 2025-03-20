@@ -209,7 +209,6 @@ const RenderChatContent = memo(
           
           if (startPos && endPos) {
             setHighlightInfo({
-              chunkIndex: index,
               startPos: parseInt(startPos),
               endPos: parseInt(endPos)
             });

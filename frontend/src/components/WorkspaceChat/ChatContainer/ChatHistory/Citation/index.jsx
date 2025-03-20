@@ -112,14 +112,14 @@ function CitationDetailModal({ source, highlightInfo, onClose }) {
   const { isUrl, text: webpageUrl, href: linkTo } = parseChunkSource(source);
 
   // 텍스트에 하이라이트 적용하는 함수
-  const highlightTextRange = (text, chunkIdx, params) => {
-    if (!params || params.chunkIndex !== chunkIdx) return text;
+  const highlightTextRange = (text, params) => {
+    if (!params) return text;
     
     const { startPos, endPos } = params;
     if (startPos < 0 || endPos > text.length || startPos >= endPos) return text;
     
-    const beforeText = text.substring(0, startPos - 1);
-    const highlightedText = text.substring(startPos - 1, endPos);
+    const beforeText = text.substring(0, startPos);
+    const highlightedText = text.substring(startPos, endPos);
     const afterText = text.substring(endPos);
     
     return (
@@ -180,8 +180,7 @@ function CitationDetailModal({ source, highlightInfo, onClose }) {
                   <div className="flex flex-col w-full justify-start pb-6 gap-y-1">
                     <p className="text-white whitespace-pre-line">
                       {highlightTextRange(
-                        HTMLDecode(omitChunkHeader(text)), 
-                        idx + 1, 
+                        HTMLDecode(omitChunkHeader(text)),
                         highlightInfo
                       )}
                     </p>
