@@ -79,6 +79,10 @@ async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
     // tags가 비어있으면 이전 태그를 사용
     if (!tag && previousTag) {
       tag = previousTag;
+    } else if (!tag && index === 0) {
+      tag = "title";
+    } else if (!tag) {
+      tag = "undefined";
     }
     
     if (tag) {
