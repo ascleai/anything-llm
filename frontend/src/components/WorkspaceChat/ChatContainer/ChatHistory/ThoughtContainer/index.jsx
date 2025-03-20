@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 import { isMobile } from "react-device-detect";
 import ThinkingAnimation from "@/media/animations/thinking-animation.webm";
 import ThinkingStatic from "@/media/animations/thinking-static.png";
+import { useTranslation } from "react-i18next";
 
 const THOUGHT_KEYWORDS = ["thought", "thinking", "think", "thought_chain"];
 const CLOSING_TAGS = [...THOUGHT_KEYWORDS, "response", "answer"];
@@ -30,6 +31,7 @@ const THOUGHT_PREVIEW_LENGTH = isMobile ? 25 : 50;
  */
 export const ThoughtChainComponent = forwardRef(
   ({ content: initialContent, expanded }, ref) => {
+    const { t } = useTranslation();
     const [content, setContent] = useState(initialContent);
     const [isExpanded, setIsExpanded] = useState(expanded);
     useImperativeHandle(ref, () => ({
@@ -78,8 +80,8 @@ export const ThoughtChainComponent = forwardRef(
                     playsInline
                     className={`w-7 h-7 transition-opacity duration-200 light:invert light:opacity-50 ${isThinking ? "opacity-100" : "opacity-0 hidden"}`}
                     data-tooltip-id="cot-thinking"
-                    data-tooltip-content="Model is thinking..."
-                    aria-label="Model is thinking..."
+                    data-tooltip-content={t("chat_window.thought_chain.thinking")}
+                    aria-label={t("chat_window.thought_chain.thinking")}
                   >
                     <source src={ThinkingAnimation} type="video/webm" />
                   </video>
@@ -88,8 +90,8 @@ export const ThoughtChainComponent = forwardRef(
                     alt="Thinking complete"
                     className={`w-6 h-6 transition-opacity duration-200 light:invert light:opacity-50 ${!isThinking && isComplete ? "opacity-100" : "opacity-0 hidden"}`}
                     data-tooltip-id="cot-thinking"
-                    data-tooltip-content="Model has finished thinking"
-                    aria-label="Model has finished thinking"
+                    data-tooltip-content={t("chat_window.thought_chain.finished")}
+                    aria-label={t("chat_window.thought_chain.finished")}
                   />
                 </>
               ) : null}
@@ -121,11 +123,11 @@ export const ThoughtChainComponent = forwardRef(
                   onClick={handleExpandClick}
                   data-tooltip-id="expand-cot"
                   data-tooltip-content={
-                    isExpanded ? "Hide thought chain" : "Show thought chain"
+                    isExpanded ? t("chat_window.thought_chain.hide") : t("chat_window.thought_chain.show")
                   }
                   className="border-none text-theme-text-secondary hover:text-theme-text-primary transition-colors p-1 rounded-full hover:bg-theme-sidebar-item-hover"
                   aria-label={
-                    isExpanded ? "Hide thought chain" : "Show thought chain"
+                    isExpanded ? t("chat_window.thought_chain.hide") : t("chat_window.thought_chain.show")
                   }
                 >
                   <CaretDown

@@ -822,7 +822,15 @@ const TRANSLATIONS = {
       file_embedded: "파일이 추가되었습니다!",
       file_upload_message: "{{fileName}}가 업로드되어 워크스페이스에 추가되었습니다. 이제 채팅에서 사용할 수 있습니다.",
       image_attach: "이미지가 첨부되었습니다!",
-      image_upload_message: "{{fileName}}가 프롬프트에 첨부되었습니다. 워크스페이스에 영구적으로 포함되지 않습니다."
+      image_upload_message: "{{fileName}}가 프롬프트에 첨부되었습니다. 워크스페이스에 영구적으로 포함되지 않습니다.",
+      thought_chain: {
+        show: "펼치기",
+        hide: "숨기기",
+        thinking: "진행 중...",
+        finished: "완료"
+      },
+      copy_block: "복사",
+      copied: "복사됨"
     },
     action: {
       copy: "복사",
