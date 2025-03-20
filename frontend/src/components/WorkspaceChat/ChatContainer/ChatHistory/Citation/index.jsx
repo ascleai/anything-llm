@@ -105,36 +105,11 @@ function omitChunkHeader(text) {
   return text.split("</document_metadata>")[1].trim();
 }
 
-function CitationDetailModal({ source, onClose }) {
+function CitationDetailModal({ source, highlightInfo, onClose }) {
   if (!source) return null;
   
   const { references, title, chunks = [] } = source || {};
   const { isUrl, text: webpageUrl, href: linkTo } = parseChunkSource(source);
-
-  const getHighlightParams = () => {
-    // 클릭된 인용 링크에서 데이터 가져오기
-    const citationLink = document.querySelector('a.citation-link[data-start-pos][data-end-pos]');
-    
-    if (citationLink) {
-      return {
-        chunkIndex: parseInt(citationLink.getAttribute('data-citation-index')),
-        startPos: parseInt(citationLink.getAttribute('data-start-pos')),
-        endPos: parseInt(citationLink.getAttribute('data-end-pos'))
-      };
-    }
-    
-    // URL 해시에서도 확인 (기존 방식 유지)
-    const match = window.location.hash.match(/\[(\d+):(\d+):(\d+)\]/);
-    if (match) {
-      return {
-        chunkIndex: parseInt(match[1]),
-        startPos: parseInt(match[2]),
-        endPos: parseInt(match[3])
-      };
-    }
-    
-    return null;
-  };
 
   // 텍스트에 하이라이트 적용하는 함수
   const highlightTextRange = (text, chunkIdx, params) => {
@@ -157,8 +132,6 @@ function CitationDetailModal({ source, onClose }) {
       </>
     );
   };
-
-  const highlightParams = getHighlightParams();
 
   return (
     <ModalWrapper isOpen={source}>
@@ -209,7 +182,7 @@ function CitationDetailModal({ source, onClose }) {
                       {highlightTextRange(
                         HTMLDecode(omitChunkHeader(text)), 
                         idx + 1, 
-                        highlightParams
+                        highlightInfo
                       )}
                     </p>
 

@@ -101,7 +101,11 @@ markdown.core.ruler.push('citation_links', state => {
               
               // 텍스트 토큰
               const textToken = new state.Token('text', '', 0);
-              textToken.content = match;
+              if (startPos && endPos) {
+                textToken.content = `[${chunkIndex}]`;
+              } else {
+                textToken.content = match;
+              }
               newTokens.push(textToken);
               
               // 링크 클로즈 토큰

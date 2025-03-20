@@ -99,15 +99,32 @@ function RenderAssistantChatContent({ message, sources = [] }) {
   const contentRef = useRef("");
   const thoughtChainRef = useRef(null);
   const [selectedSource, setSelectedSource] = useState(null);
+  const [highlightInfo, setHighlightInfo] = useState(null);
   const renderedContentRef = useRef(null);
   
   // DOM 이벤트 리스너 추가
   useEffect(() => {
     const handleCitationClick = (e) => {
       // citation-link 클래스를 가진 링크 클릭 감지
-      if (e.target.closest('.citation-link')) {
+      const citationLink = e.target.closest('.citation-link');
+      if (citationLink) {
         e.preventDefault();
-        const index = parseInt(e.target.closest('.citation-link').dataset.citationIndex, 10);
+        const index = parseInt(citationLink.dataset.citationIndex, 10);
+        
+        // 하이라이트 정보 추출 (추가된 부분)
+        const startPos = citationLink.getAttribute('data-start-pos');
+        const endPos = citationLink.getAttribute('data-end-pos');
+        
+        if (startPos && endPos) {
+          setHighlightInfo({
+            chunkIndex: index,
+            startPos: parseInt(startPos),
+            endPos: parseInt(endPos)
+          });
+        } else {
+          setHighlightInfo(null); // 하이라이트 정보가 없는 경우
+        }
+        
         if (sources && sources.length > 0) {
           const sourceIndex = Math.min(index - 1, sources.length - 1);
           if (sourceIndex >= 0 && sources[sourceIndex]) {
@@ -190,7 +207,11 @@ function RenderAssistantChatContent({ message, sources = [] }) {
       {selectedSource && (
         <CitationDetailModal
           source={selectedSource}
-          onClose={() => setSelectedSource(null)}
+          highlightInfo={highlightInfo}
+          onClose={() => {
+            setSelectedSource(null);
+            setHighlightInfo(null);
+          }}
         />
       )}
     </div>
