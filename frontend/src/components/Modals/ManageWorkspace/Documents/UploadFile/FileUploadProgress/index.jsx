@@ -4,6 +4,7 @@ import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import Workspace from "../../../../../../models/workspace";
 import { humanFileSize, milliToHms } from "../../../../../../utils/numbers";
 import PreLoader from "../../../../../Preloader";
+import { useTranslation } from "react-i18next";
 
 function FileUploadProgressComponent({
   slug,
@@ -17,6 +18,7 @@ function FileUploadProgressComponent({
   setLoading,
   setLoadingMessage,
 }) {
+  const { t } = useTranslation();
   const [timerMs, setTimerMs] = useState(10);
   const [status, setStatus] = useState("pending");
   const [error, setError] = useState("");
@@ -39,7 +41,7 @@ function FileUploadProgressComponent({
   useEffect(() => {
     async function uploadFile() {
       setLoading(true);
-      setLoadingMessage("Uploading file...");
+      setLoadingMessage(t("connectors.upload.uploading"));
       const start = Number(new Date());
       const formData = new FormData();
       formData.append("file", file, file.name);

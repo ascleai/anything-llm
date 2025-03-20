@@ -773,6 +773,7 @@ const TRANSLATIONS = {
         "placeholder-link": "https://example.com",
         fetching: "가져오는 중...",
         "fetch-website": "웹사이트 가져오기",
+        uploading: "파일 업로드 중...",
         scraping: "링크에서 스크랩 중...",
         "privacy-notice":
           "이 파일들은 A-Insight 인스턴스에서 실행 중인 문서 프로세서에 업로드되며, 타사에 전송되거나 공유되지 않습니다.",
@@ -817,7 +818,21 @@ const TRANSLATIONS = {
       text_size: "글씨 크기 변경",
       microphone: "음성 입력",
       micro_alert: "A-Insight는 마이크에 액세스할 수 없습니다. 해당 사이트에서 이 기능을 사용하도록 설정해 주세요.",
-      send: "워크스페이스에 프롬프트 전송",
+      send: "워크스페이스에 메시지 전송",
+      file_embedded: "파일이 추가되었습니다!",
+      file_upload_message: "{{fileName}}가 업로드되어 워크스페이스에 추가되었습니다. 이제 채팅에서 사용할 수 있습니다.",
+      file_upload_failed: "파일 업로드를 실패했습니다.",
+      file_unavailable: "워크스페이스에서 사용할 수 없습니다",
+      image_attach: "이미지가 첨부되었습니다!",
+      image_upload_message: "{{fileName}}가 프롬프트에 첨부되었습니다. 워크스페이스에 영구적으로 포함되지 않습니다.",
+      thought_chain: {
+        show: "펼치기",
+        hide: "숨기기",
+        thinking: "진행 중...",
+        finished: "완료"
+      },
+      copy_block: "복사",
+      copied: "복사됨",
     },
     action: {
       copy: "복사",

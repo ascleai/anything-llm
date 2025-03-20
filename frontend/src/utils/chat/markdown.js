@@ -5,14 +5,19 @@ import hljs from "highlight.js";
 import "./themes/github-dark.css";
 import "./themes/github.css";
 import { v4 } from "uuid";
+import { useTranslation } from "react-i18next";
 
-// 인용 참조 링크 패턴 (예: [1], [source 1], [doc 3] 등)
-const CITATION_LINK_REGEX = /\[(\d+|source\s+\d+|doc\s+\d+)\]/g;
+// 인용 참조 링크 패턴 - [숫자] 또는 [숫자:숫자:숫자] 형식만 지원
+const CITATION_LINK_REGEX = /\[(\d+)(?::(\d+):(\d+))?\]/g;
+
+
 
 const markdown = markdownIt({
   html: false,
   typographer: true,
   highlight: function (code, lang) {
+    const { t } = useTranslation();
+    const copy_block = t("chat_window.copy_block")
     const uuid = v4();
     const theme =
       window.localStorage.getItem("theme") === "light"
@@ -29,7 +34,7 @@ const markdown = markdownIt({
               </div>
               <button data-code-snippet data-code="code-${uuid}" class="flex items-center gap-x-1">
                 <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-                <p class="text-xs" style="margin: 0px;padding: 0px;">Copy block</p>
+                <p class="text-xs" style="margin: 0px;padding: 0px;">${copy_block}</p>
               </button>
             </div>
           <pre class="whitespace-pre-wrap">` +
@@ -45,7 +50,7 @@ const markdown = markdownIt({
           <div class="flex gap-2"><code class="text-xs"></code></div>
           <button data-code-snippet data-code="code-${uuid}" class="flex items-center gap-x-1">
             <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-            <p class="text-xs" style="margin: 0px;padding: 0px;">Copy block</p>
+            <p class="text-xs" style="margin: 0px;padding: 0px;">${copy_block}</p>
           </button>
         </div>
       <pre class="whitespace-pre-wrap">` +
@@ -72,7 +77,7 @@ markdown.core.ruler.push('citation_links', state => {
             let lastPos = 0;
             const newTokens = [];
             
-            text.replace(CITATION_LINK_REGEX, (match, p1, offset) => {
+            text.replace(CITATION_LINK_REGEX, (match, chunkIndex, startPos, endPos, offset) => {
               // 매치 전 텍스트 추가
               if (offset > lastPos) {
                 const textToken = new state.Token('text', '', 0);
@@ -83,13 +88,29 @@ markdown.core.ruler.push('citation_links', state => {
               // 링크 오픈 토큰
               const linkOpenToken = new state.Token('citation_link_open', 'a', 1);
               linkOpenToken.attrSet('href', '#');
-              linkOpenToken.attrSet('class', 'citation-link text-sky-400 hover:text-sky-300');
-              linkOpenToken.attrSet('data-citation-index', p1.replace(/\D/g, ''));
+              
+              // [1:10:40] 형식인지 확인
+              if (startPos && endPos) {
+                // 하이라이트가 있는 인용
+                linkOpenToken.attrSet('class', 'citation-link text-sky-400 hover:text-sky-300');
+                linkOpenToken.attrSet('data-citation-index', chunkIndex);
+                linkOpenToken.attrSet('data-start-pos', startPos);
+                linkOpenToken.attrSet('data-end-pos', endPos);
+              } else {
+                // 일반 인용
+                linkOpenToken.attrSet('class', 'citation-link text-sky-400 hover:text-sky-300');
+                linkOpenToken.attrSet('data-citation-index', chunkIndex);
+              }
+              
               newTokens.push(linkOpenToken);
               
               // 텍스트 토큰
               const textToken = new state.Token('text', '', 0);
-              textToken.content = match;
+              if (startPos && endPos) {
+                textToken.content = `[${chunkIndex}]`;
+              } else {
+                textToken.content = match;
+              }
               newTokens.push(textToken);
               
               // 링크 클로즈 토큰
@@ -119,7 +140,19 @@ markdown.core.ruler.push('citation_links', state => {
 // 새로운 토큰 타입에 대한 렌더러 추가
 markdown.renderer.rules.citation_link_open = function(tokens, idx) {
   const token = tokens[idx];
-  return `<a href="#" class="${token.attrGet('class')}" data-citation-index="${token.attrGet('data-citation-index')}">`;
+  const className = token.attrGet('class');
+  const citationIndex = token.attrGet('data-citation-index');
+  
+  let attrs = `class="${className}" data-citation-index="${citationIndex}"`;
+  
+  const startPos = token.attrGet('data-start-pos');
+  const endPos = token.attrGet('data-end-pos');
+  
+  if (startPos && endPos) {
+    attrs += ` data-start-pos="${startPos}" data-end-pos="${endPos}"`;
+  }
+  
+  return `<a href="#" ${attrs}>`;
 };
 
 markdown.renderer.rules.citation_link_close = function() {

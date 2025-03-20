@@ -511,7 +511,7 @@ const TRANSLATIONS = {
     title: "LLM Preference",
     description:
       "These are the credentials and settings for your preferred LLM chat & embedding provider. Its important these keys are current and correct or else A-Insight will not function properly.",
-    provider: "LLM Provider",
+    provider: "LLM Provider"
   },
 
   transcription: {
@@ -851,6 +851,8 @@ const TRANSLATIONS = {
       "placeholder-link": "https://example.com",
       fetching: "Fetching...",
       "fetch-website": "Fetch website",
+      uploading: "Uploading file...",
+      scraping: "Scraping link...",
       "privacy-notice":
         "These files will be uploaded to the document processor running on this A-Insight instance. These files are not sent or shared with a third party.",
     },
@@ -896,6 +898,20 @@ const TRANSLATIONS = {
     microphone: "Speak your prompt.",
     micro_alert: "A-Insight does not have access to microphone. Please enable for this site to use this feature.",
     send: "Send prompt message to workspace",
+    file_embedded: "File embedded!",
+    file_upload_message: "{{fileName}} was uploaded and embedded into this workspace. It will be available for RAG chat now.",
+    file_upload_failed: "this file failed to upload",
+    file_unavailable: "It will not be available in the workspace.",
+    image_attach: "Image attached!",
+    image_upload_message: "{{fileName}} will be attached to this prompt. It will not be embedded into the workspace permanently.",
+    thought_chain: {
+      show: "Show thought chain",
+      hide: "Hide thought chain",
+      thinking: "Model is thinking...",
+      finished: "Model has finished thinking"
+    },
+    copy_block: "Copy block",
+    copied: "Copied!",
   },
   action: {
     copy: "Copy",
