@@ -164,6 +164,7 @@ class LocalAiLLM {
       }),
       messages
     );
+
     return measuredStreamRequest;
   }
 
