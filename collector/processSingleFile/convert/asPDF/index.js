@@ -8,6 +8,7 @@ const { tokenizeString } = require("../../../utils/tokenizer");
 const { default: slugify } = require("slugify");
 const PDFLoader = require("./PDFLoader");
 const OCRLoader = require("../../../utils/OCRLoader");
+const { determineTags } = require("./PDFLoader/determineTags");
 
 async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
   const pdfLoader = new PDFLoader(fullFilePath, {
@@ -15,29 +16,21 @@ async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
   });
 
   console.log(`-- Working ${filename} --`);
-  const pageContent = [];
+  
+  // PDFLoader를 사용하여 페이지별 텍스트 추출
   let docs = await pdfLoader.load();
 
+  // 텍스트가 없는 경우, OCRLoader를 사용하여 텍스트 추출
   if (docs.length === 0) {
-    console.log(
-      `[asPDF] No text content found for ${filename}. Will attempt OCR parse.`
-    );
+    console.log(`[asPDF] No text content found for ${filename}. Will attempt OCR parse.`);
     docs = await new OCRLoader({
       targetLanguages: options?.ocr?.langList,
     }).ocrPDF(fullFilePath);
   }
 
-  for (const doc of docs) {
-    console.log(
-      `-- Parsing content from pg ${
-        doc.metadata?.loc?.pageNumber || "unknown"
-      } --`
-    );
-    if (!doc.pageContent || !doc.pageContent.length) continue;
-    pageContent.push(doc.pageContent);
-  }
-
-  if (!pageContent.length) {
+  // 각 페이지 문서 중 텍스트가 있는 것만 사용
+  const validDocs = docs.filter(doc => doc.pageContent && doc.pageContent.length);
+  if (validDocs.length === 0) {
     console.error(`[asPDF] Resulting text content was empty for ${filename}.`);
     trashFile(fullFilePath);
     return {
@@ -47,30 +40,73 @@ async function asPdf({ fullFilePath = "", filename = "", options = {} }) {
     };
   }
 
-  const content = pageContent.join("");
-  const data = {
+  // 메인 문서 생성: 전체 페이지 텍스트를 결합하여 하나의 문서로 저장
+  const fullContent = validDocs.map(doc => doc.pageContent).join("");
+  const mainData = {
     id: v4(),
     url: "file://" + fullFilePath,
     title: filename,
-    docAuthor: docs[0]?.metadata?.pdf?.info?.Creator || "no author found",
-    description: docs[0]?.metadata?.pdf?.info?.Title || "No description found.",
+    docAuthor: validDocs[0]?.metadata?.pdf?.info?.Creator || "no author found",
+    description: validDocs[0]?.metadata?.pdf?.info?.Title || "No description found.",
     docSource: "pdf file uploaded by the user.",
     chunkSource: "",
     published: createdDate(fullFilePath),
-    wordCount: content.split(" ").length,
-    pageContent: content,
-    token_count_estimate: tokenizeString(content),
+    wordCount: fullContent.split(" ").length,
+    pageContent: fullContent,
+    token_count_estimate: tokenizeString(fullContent),
+    tag: "full",
   };
 
-  const document = writeToServerDocuments(
-    data,
+  const mainDocument = writeToServerDocuments(
+    mainData,
     `${slugify(filename, {
       remove: /[^\w\s$*_+~.()'"!\-:@\uAC00-\uD7A3]+/g,
-    })}-${data.id}`
+    })}-${mainData.id}`
   );
+
+  // 태그별로 페이지들을 그룹화하여 별도의 문서 생성
+  const tagGroups = {};
+  validDocs.forEach(doc => {
+    // 각 페이지 텍스트로부터 태그 리스트 생성
+    const tags = determineTags(doc.pageContent);
+    const tag = tags[0]
+    if (!tagGroups[tag]) {
+      tagGroups[tag] = [];
+    }
+    tagGroups[tag].push(doc.pageContent);
+  });
+
+  const tagDocuments = [];
+  for (const tag in tagGroups) {
+    // 해당 태그에 해당하는 페이지 텍스트 결합
+    const tagContent = tagGroups[tag].join("\n\n");
+    const tagData = {
+      id: v4(),
+      url: "file://" + fullFilePath,
+      title: `${filename} - ${tag}`,
+      docAuthor: validDocs[0]?.metadata?.pdf?.info?.Creator || "no author found",
+      description: validDocs[0]?.metadata?.pdf?.info?.Title || "No description found.",
+      docSource: "pdf file uploaded by the user.",
+      chunkSource: "",
+      published: createdDate(fullFilePath),
+      wordCount: tagContent.split(" ").length,
+      pageContent: tagContent,
+      token_count_estimate: tokenizeString(tagContent),
+      tag,  // 태그 정보를 추가할 수도 있음
+    };
+
+    const tagDocument = writeToServerDocuments(
+      tagData,
+      `${slugify(`${filename}-${tag}`, {
+        remove: /[^\w\s$*_+~.()'"!\-:@\uAC00-\uD7A3]+/g,
+      })}-${tagData.id}`
+    );
+    tagDocuments.push(tagDocument);
+  }
+
   trashFile(fullFilePath);
   console.log(`[SUCCESS]: ${filename} converted & ready for embedding.\n`);
-  return { success: true, reason: null, documents: [document] };
+  return { success: true, reason: null, documents: [mainDocument, ...tagDocuments] };
 }
 
 module.exports = asPdf;
