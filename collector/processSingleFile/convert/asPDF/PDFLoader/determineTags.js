@@ -59,7 +59,7 @@ function removeSpacesAndLower(text) {
         "title": ["발행된 사본", "상기 용도 외", "제출용"],
         "bills": ["본인부담", "할인액", "공단부담"],
         "bills_detail": ["입원처방 상세내역", "세부산정내역", "세부내역서"],
-        "confirmation": ["원무과"],
+        "confirmation": ["원무과", "확인합니다", "FAX"],
         "medical_record": ["초진", "재진", "주상병", "보조상병", "Subjecive", "Chart", "Note", "진료기록"],
         "doctor_order": ["Order", "오더의", "오더시간", "처방자"],
         "exam_report": ["검사명", "영상검사", "진단검사", "검사결과", "report", "result", "Findings", "검사항목", "study"],
