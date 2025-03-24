@@ -966,7 +966,8 @@ function dumpENV() {
     "REQUEST_TIMEOUT",
     "SHOW_ALL_CUSTOMIZATIONS",
     "DATABASE_URL",
-    "DEFAULT_PROMPT"
+    "DEFAULT_PROMPT",
+    "DEFAULT_TOPN"
   ];
 
   // Simple sanitization of each value to prevent ENV injection via newline or quote escaping.
