@@ -204,9 +204,8 @@ JSON format:
 table_of_content: 답변의 목차
 overview: 답변의 요약
 sub_problems:
-- "citation": List of Integer. 당신이 생성한 답변의 근거가 되는 CONTEXT의 Number들의 list. 만약 참고한 CONTEXT가 없으면 [-1]
-- "source": List of String. 각 citation의 원문. 수정하거나 요약하지 말고 원문장을 그대로 쓰시오. 만약 참고한 CONTEXT가 없으면 'None'
-- "answer": 각 subproblem에 대한 상세한 답변을 Header와 그 아래 bullet들로 구성하시오. 각 bullet에는 참고한 CONTEXT의 번호를 [Number]로 덧붙이시오. Markdown을 활용하시오.`
+- "answer": CONTEXT들을 참고한 각 sub problem에 대한 answer. Header와 그 아래 Bullet들로 구성하시오. 각 bullet에는 참고한 CONTEXT의 번호를 [Number]로 덧붙이시오. Markdown을 활용하시오.
+- "citations": list of "Context Number:Original Sentence". Context Number는 참고한 CONTEXT의 번호이며, Original Sentence는 answer와 가장 연관된 문장으로 문장을 수정하거나 요약하지 말고 원문장을 그대로 사용하시오. 참고한 CONTEXT가 없으면 ['-1:None'].`
   );
 }
 
