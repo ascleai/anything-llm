@@ -47,7 +47,7 @@ function workspaceEndpoints(app) {
       try {
         const user = await userFromSession(request, response);
         const { name = null, onboardingComplete = false } = reqBody(request);
-        const { workspace, message } = await Workspace.new(name, user?.id);
+        const { workspace, message } = await Workspace.new(name, user?.id, { topN: process.env.DEFAULT_TOPN || 10 });
         await Telemetry.sendTelemetry(
           "workspace_created",
           {

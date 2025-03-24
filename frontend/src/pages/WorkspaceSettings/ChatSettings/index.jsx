@@ -67,6 +67,7 @@ export default function ChatSettings({ workspace }) {
         />
         <ChatPromptSettings
           workspace={workspace}
+          settings={settings}
           setHasChanges={setHasChanges}
         />
         <ChatQueryRefusalResponse

@@ -66,9 +66,23 @@ const Workspace = {
       return threshold;
     },
     topN: (value) => {
-      if (value === null || value === undefined) return 4;
+      if (value === null || value === undefined) {
+        const defaultTopN = process.env.DEFAULT_TOPN 
+          ? parseInt(process.env.DEFAULT_TOPN) 
+          : 10;
+        
+        return !isNaN(defaultTopN) ? defaultTopN : 10;
+      }
+      
       const n = parseInt(value);
-      if (isNullOrNaN(n)) return 4;
+      if (isNullOrNaN(n)) {
+        // 여기서도 환경 변수 사용
+        const defaultTopN = process.env.DEFAULT_TOPN 
+          ? parseInt(process.env.DEFAULT_TOPN) 
+          : 10;
+        return !isNaN(defaultTopN) ? defaultTopN : 10;
+      }
+      
       if (n < 1) return 1;
       return n;
     },

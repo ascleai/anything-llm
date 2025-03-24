@@ -281,7 +281,12 @@ const SystemSettings = {
       // Appearance Settings
       // --------------------------------------------------------
       ShowAllCustomizations:
-        process.env.SHOW_ALL_CUSTOMIZATIONS === "0" ? false : true
+        process.env.SHOW_ALL_CUSTOMIZATIONS === "0" ? false : true,
+
+      // --------------------------------------------------------
+      // Chat Settings
+      // --------------------------------------------------------
+      DefaultPrompt: process.env.DEFAULT_PROMPT || null,
     };
   },
 
