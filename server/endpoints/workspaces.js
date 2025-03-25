@@ -115,6 +115,12 @@ function workspaceEndpoints(app) {
       handleFileUpload,
     ],
     async function (request, response) {
+      const abortController = new AbortController();
+      const handleAbort = () => {
+        abortController.abort();
+      };
+      response.on('close', handleAbort);
+
       try {
         const Collector = new CollectorApi();
         const { originalname } = request.file;
@@ -132,7 +138,7 @@ function workspaceEndpoints(app) {
         }
 
         const { success, reason } =
-          await Collector.processDocument(originalname);
+          await Collector.processDocument(originalname, abortController.signal);
         if (!success) {
           response.status(500).json({ success: false, error: reason }).end();
           return;
@@ -879,6 +885,12 @@ function workspaceEndpoints(app) {
     ],
     async function (request, response) {
       try {
+        const abortController = new AbortController();
+        const handleAbort = () => {
+          abortController.abort();
+        };
+        response.on('close', handleAbort);
+
         const { slug = null } = request.params;
         const user = await userFromSession(request, response);
         const currWorkspace = multiUserMode(response)
@@ -906,7 +918,7 @@ function workspaceEndpoints(app) {
         }
 
         const { success, reason, documents } =
-          await Collector.processDocument(originalname);
+          await Collector.processDocument(originalname, abortController.signal);
         if (!success || documents?.length === 0) {
           response.status(500).json({ success: false, error: reason }).end();
           return;

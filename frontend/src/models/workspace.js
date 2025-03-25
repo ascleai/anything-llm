@@ -238,11 +238,12 @@ const Workspace = {
       .then((res) => res.ok)
       .catch(() => false);
   },
-  uploadFile: async function (slug, formData) {
+  uploadFile: async function (slug, formData, signal) {
     const response = await fetch(`${API_BASE}/workspace/${slug}/upload`, {
       method: "POST",
       body: formData,
       headers: baseHeaders(),
+      signal: signal,
     });
 
     const data = await response.json();
