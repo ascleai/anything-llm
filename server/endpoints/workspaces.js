@@ -35,6 +35,8 @@ const { WorkspaceThread } = require("../models/workspaceThread");
 const truncate = require("truncate");
 const { purgeDocument } = require("../utils/files/purgeDocument");
 
+const activeUploads = new Map(); // clientId -> Set of AbortControllers
+
 function workspaceEndpoints(app) {
   if (!app) return;
 
@@ -890,7 +892,14 @@ function workspaceEndpoints(app) {
           abortController.abort();
         };
         response.on('close', handleAbort);
-
+        
+        const clientId = request.body.clientId || 'unknown';
+        
+        if (!activeUploads.has(clientId)) {
+          activeUploads.set(clientId, new Set());
+        }
+        activeUploads.get(clientId).add(abortController);
+        
         const { slug = null } = request.params;
         const user = await userFromSession(request, response);
         const currWorkspace = multiUserMode(response)
@@ -948,6 +957,14 @@ function workspaceEndpoints(app) {
             .status(200)
             .json({ success: false, error: errors?.[0], document: null });
 
+        // 업로드 완료 후 컨트롤러 제거
+        if (activeUploads.has(clientId)) {
+          activeUploads.get(clientId).delete(abortController);
+          if (activeUploads.get(clientId).size === 0) {
+            activeUploads.delete(clientId);
+          }
+        }
+        
         response.status(200).json({
           success: true,
           error: null,
@@ -985,6 +1002,36 @@ function workspaceEndpoints(app) {
       } catch (e) {
         console.error(e.message, e);
         response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.post(
+    "/workspace/cancel-uploads",
+    [validatedRequest, flexUserRoleValid([ROLES.all])],
+    async function (request, response) {
+      try {
+        const { clientId } = reqBody(request);
+        
+        if (activeUploads.has(clientId)) {
+          const controllers = activeUploads.get(clientId);
+          controllers.forEach(controller => {
+            try {
+              if (controller && !controller.signal.aborted) {
+                controller.abort();
+              }
+            } catch (e) {
+              console.error("업로드 취소 중 오류:", e);
+            }
+          });
+          
+          activeUploads.delete(clientId);
+        }
+        
+        response.status(200).json({ success: true });
+      } catch (error) {
+        console.error("업로드 취소 처리 중 오류:", error);
+        response.status(500).json({ success: false, error: error.message });
       }
     }
   );

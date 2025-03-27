@@ -38,6 +38,7 @@ export function DnDFileUploaderProvider({ workspace, children }) {
     window.addEventListener(REMOVE_ATTACHMENT_EVENT, handleRemove);
     window.addEventListener(CLEAR_ATTACHMENTS_EVENT, resetAttachments);
     window.addEventListener(PASTE_ATTACHMENT_EVENT, handlePastedAttachment);
+    Workspace.cancelAllUploads();
 
     return () => {
       window.removeEventListener(REMOVE_ATTACHMENT_EVENT, handleRemove);
@@ -46,6 +47,7 @@ export function DnDFileUploaderProvider({ workspace, children }) {
         PASTE_ATTACHMENT_EVENT,
         handlePastedAttachment
       );
+      Workspace.cancelAllUploads();
     };
   }, []);
 
@@ -176,6 +178,7 @@ export function DnDFileUploaderProvider({ workspace, children }) {
 
       const formData = new FormData();
       formData.append("file", attachment.file, attachment.file.name);
+      formData.append("clientId", Workspace.getClientId());
       Workspace.uploadAndEmbedFile(workspace.slug, formData).then(
         ({ response, data }) => {
           const updates = {
