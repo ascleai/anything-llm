@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, useRef,memo } from "react";
 import truncate from "truncate";
 import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import Workspace from "../../../../../../models/workspace";
@@ -25,6 +25,7 @@ function FileUploadProgressComponent({
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [progress, setProgress] = useState(0);
   const estimatedUploadTime = 200 * 1000;
+  const abortControllerRef = useRef(new AbortController());
 
   const fadeOut = (cb) => {
     setIsFadingOut(true);
@@ -39,6 +40,7 @@ function FileUploadProgressComponent({
   };
 
   useEffect(() => {
+    let timer;
     async function uploadFile() {
       setLoading(true);
       setLoadingMessage(t("connectors.upload.uploading"));
@@ -46,7 +48,7 @@ function FileUploadProgressComponent({
       const formData = new FormData();
       formData.append("file", file, file.name);
 
-      const timer = setInterval(() => {
+      timer = setInterval(() => {
         const elapsedTime = Date.now() - start;
         setTimerMs(elapsedTime);
 
@@ -55,7 +57,11 @@ function FileUploadProgressComponent({
       }, 100);
 
       // Chunk streaming not working in production so we just sit and wait
-      const { response, data } = await Workspace.uploadFile(slug, formData);
+      const { response, data } = await Workspace.uploadFile(
+        slug, 
+        formData, 
+        abortControllerRef.current.signal
+      );
       clearInterval(timer);
 
       if (!response.ok) {
@@ -76,6 +82,13 @@ function FileUploadProgressComponent({
       setTimeout(() => fadeOut(() => setTimeout(() => beginFadeOut(), 300)), 5000);
     }
     !!file && !rejected && uploadFile();
+
+    // 컴포넌트 언마운트 시 업로드 취소
+    return () => {
+      clearInterval(timer); 
+      abortControllerRef.current.abort();
+      setStatus("cancelled");
+    };
   }, []);
 
   if (rejected) {

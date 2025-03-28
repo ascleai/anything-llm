@@ -238,11 +238,12 @@ const Workspace = {
       .then((res) => res.ok)
       .catch(() => false);
   },
-  uploadFile: async function (slug, formData) {
+  uploadFile: async function (slug, formData, signal) {
     const response = await fetch(`${API_BASE}/workspace/${slug}/upload`, {
       method: "POST",
       body: formData,
       headers: baseHeaders(),
+      signal: signal,
     });
 
     const data = await response.json();
@@ -439,17 +440,24 @@ const Workspace = {
    * @returns {Promise<{response: {ok: boolean}, data: {success: boolean, error: string|null, document: {id: string, location:string}|null}}>}
    */
   uploadAndEmbedFile: async function (slug, formData) {
-    const response = await fetch(
-      `${API_BASE}/workspace/${slug}/upload-and-embed`,
-      {
-        method: "POST",
-        body: formData,
-        headers: baseHeaders(),
+    try {
+      const response = await fetch(
+        `${API_BASE}/workspace/${slug}/upload-and-embed`,
+        {
+          method: "POST",
+          body: formData,
+          headers: baseHeaders(),
+        }
+      );
+      
+      const data = await response.json();
+      return { response, data };
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        console.log('업로드가 취소되었습니다.');
       }
-    );
-
-    const data = await response.json();
-    return { response, data };
+      throw error;
+    }
   },
 
   /**
@@ -470,6 +478,29 @@ const Workspace = {
     return response.ok;
   },
   threads: WorkspaceThread,
+  // 클라이언트 ID 생성 및 관리
+  getClientId: function() {
+    let clientId = localStorage.getItem('anythingllm_client_id');
+    if (!clientId) {
+      clientId = `client_${Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem('anythingllm_client_id', clientId);
+    }
+    return clientId;
+  },
+  // 현재 클라이언트와 관련된 모든 업로드를 취소합니다.
+  cancelAllUploads: async function() {
+    try {
+      const clientId = this.getClientId();
+      return await fetch(`${API_BASE}/workspace/cancel-uploads`, {
+        method: 'POST',
+        headers: baseHeaders(),
+        body: JSON.stringify({ clientId }),
+      }).then(res => res.ok);
+    } catch (error) {
+      console.error('업로드 취소 중 오류:', error);
+      return false;
+    }
+  }
 };
 
 export default Workspace;

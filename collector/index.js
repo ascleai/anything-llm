@@ -42,6 +42,11 @@ app.post(
   "/process",
   [verifyPayloadIntegrity],
   async function (request, response) {
+    const abortController = new AbortController();
+    response.on('close', () => {
+      abortController.abort();
+    });
+
     const { filename, options = {} } = reqBody(request);
     try {
       const targetFilename = path
@@ -51,7 +56,8 @@ app.post(
         success,
         reason,
         documents = [],
-      } = await processSingleFile(targetFilename, options);
+      } = await processSingleFile(targetFilename, options, abortController.signal);
+      
       response
         .status(200)
         .json({ filename: targetFilename, success, reason, documents });

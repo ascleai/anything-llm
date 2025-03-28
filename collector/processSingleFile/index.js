@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const { Worker } = require('worker_threads');
 const {
   WATCH_DIRECTORY,
   SUPPORTED_FILETYPE_CONVERTERS,
@@ -12,7 +13,10 @@ const {
 } = require("../utils/files");
 const RESERVED_FILES = ["__HOTDIR__.md"];
 
-async function processSingleFile(targetFilename, options = {}) {
+// Worker 맵을 저장하는 전역 객체
+const activeWorkers = new Map();
+
+async function processSingleFile(targetFilename, options = {}, signal) {
   const fullFilePath = path.resolve(
     WATCH_DIRECTORY,
     normalizePath(targetFilename)
@@ -63,16 +67,88 @@ async function processSingleFile(targetFilename, options = {}) {
     }
   }
 
-  const FileTypeProcessor = require(SUPPORTED_FILETYPE_CONVERTERS[
-    processFileAs
-  ]);
-  return await FileTypeProcessor({
-    fullFilePath,
-    filename: targetFilename,
-    options,
+  // 이미 abort 신호가 있는 경우 즉시 종료
+  if (signal?.aborted) {
+    trashFile(fullFilePath);
+    return {
+      success: false,
+      reason: "Process aborted by client",
+      documents: [],
+    };
+  }
+
+  // Worker 스레드를 사용하여 파일 처리
+  return new Promise((resolve, reject) => {
+    const workerPath = path.resolve(__dirname, './processorWorker.js');
+    
+    // Worker 생성
+    const worker = new Worker(workerPath, {
+      workerData: {
+        processorPath: SUPPORTED_FILETYPE_CONVERTERS[processFileAs],
+        params: {
+          fullFilePath,
+          filename: targetFilename,
+          options,
+        }
+      }
+    });
+
+    // worker ID를 파일 경로로 저장 (나중에 찾기 위함)
+    activeWorkers.set(targetFilename, worker);
+
+    // abort 이벤트 리스너 설정
+    let abortListener;
+    if (signal) {
+      abortListener = () => {
+        console.log(`Aborting worker for file: ${targetFilename}`);
+        worker.terminate();
+        trashFile(fullFilePath);
+        resolve({
+          success: false,
+          reason: "Process aborted by client",
+          documents: [],
+        });
+      };
+      
+      signal.addEventListener('abort', abortListener);
+    }
+
+    // Worker 메시지 처리
+    worker.on('message', (result) => {
+      activeWorkers.delete(targetFilename);
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+      }
+      resolve(result);
+    });
+
+    // 에러 처리
+    worker.on('error', (err) => {
+      console.error(`Worker error: ${err.message}`);
+      activeWorkers.delete(targetFilename);
+      if (signal && abortListener) {
+        signal.removeEventListener('abort', abortListener);
+      }
+      trashFile(fullFilePath);
+      reject(err);
+    });
+
+    // Worker 종료 처리
+    worker.on('exit', (code) => {
+      if (code !== 0 && !signal?.aborted) {
+        console.error(`Worker stopped with exit code ${code}`);
+        activeWorkers.delete(targetFilename);
+        if (signal && abortListener) {
+          signal.removeEventListener('abort', abortListener);
+        }
+        trashFile(fullFilePath);
+        reject(new Error(`Processing failed with exit code ${code}`));
+      }
+    });
   });
 }
 
+
 module.exports = {
-  processSingleFile,
+  processSingleFile
 };

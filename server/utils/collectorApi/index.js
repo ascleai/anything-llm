@@ -49,7 +49,7 @@ class CollectorApi {
       });
   }
 
-  async processDocument(filename = "") {
+  async processDocument(filename = "", signal) {
     if (!filename) return false;
 
     const data = JSON.stringify({
@@ -58,6 +58,12 @@ class CollectorApi {
     });
 
     return new Promise((resolve) => {
+      // signal이 이미 aborted 상태인지 먼저 확인
+      if (signal?.aborted) {
+        this.log('Request already aborted');
+        return resolve({ success: false, reason: 'Request aborted', documents: [] });
+      }
+
       const url = new URL(`${this.endpoint}/process`);
       const options = {
         hostname: url.hostname,
@@ -97,6 +103,13 @@ class CollectorApi {
           }
         });
       });
+
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          req.destroy();
+          resolve({ success: false, reason: 'Request aborted', documents: [] });
+        });
+      }
 
       req.on('error', (e) => {
         this.log('요청 에러:', e.message);

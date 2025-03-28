@@ -84,6 +84,12 @@ function apiDocumentEndpoints(app) {
     }
     */
       try {
+        const abortController = new AbortController();
+        const handleAbort = () => {
+          abortController.abort();
+        };
+        response.on('close', handleAbort);
+
         const Collector = new CollectorApi();
         const { originalname } = request.file;
         const processingOnline = await Collector.online();
@@ -100,7 +106,7 @@ function apiDocumentEndpoints(app) {
         }
 
         const { success, reason, documents } =
-          await Collector.processDocument(originalname);
+          await Collector.processDocument(originalname, abortController.signal);
         if (!success) {
           response
             .status(500)
@@ -204,6 +210,12 @@ function apiDocumentEndpoints(app) {
       }
       */
       try {
+        const abortController = new AbortController();
+        const handleAbort = () => {
+          abortController.abort();
+        };
+        response.on('close', handleAbort);
+
         const { originalname } = request.file;
         let folder = request.params?.folderName || "custom-documents";
         folder = normalizePath(folder);
@@ -231,7 +243,7 @@ function apiDocumentEndpoints(app) {
 
         // Process the uploaded document
         const { success, reason, documents } =
-          await Collector.processDocument(originalname);
+          await Collector.processDocument(originalname, abortController.signal);
         if (!success) {
           response
             .status(500)
